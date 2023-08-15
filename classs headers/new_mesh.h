@@ -14,54 +14,36 @@ using namespace std;
 struct Vertex {
 	glm::vec3 Position;
 	glm::vec3 Normal;
-	glm::vec2 TexCoords;
+	glm::vec3 Color;
 };
 
 //We store the id of the texture and its type e.g. a diffuse or specular texture
-struct Texture{
-	unsigned int id;
-	string type;
-	string path; // store path of texture to compare with other textures
-};
+//struct Texture {
+//	unsigned int id;
+//	string type;
+//	string path; // store path of texture to compare with other textures
+//};
 
 class Mesh {
 public:
 	// mesh data
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
-	vector<Texture> textures;
+	//vector<Texture> textures;
 
-	Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
+	Mesh(vector<Vertex> vertices, vector<unsigned int> indices)
 	{
 		this->vertices = vertices;
 		this->indices = indices;
-		this->textures = textures;
+		//this->textures = textures;
 		setupMesh();
 	}
 	void Draw(Shader& shader)
 	{
-		unsigned int diffuseNr = 1;
-		unsigned int specularNr = 1;
-		for (unsigned int i = 0; i < textures.size(); i++)
-		{
-			glActiveTexture(GL_TEXTURE0 + i); // activate texture unit first
-			// retrieve texture number (the N in diffuse_textureN)
-			string number;
-			string name = textures[i].type;
-			// diffuse ho ki specular xuttauni
-			if (name == "texture_diffuse")
-				number = std::to_string(diffuseNr++);
-			else if (name == "texture_specular")
-				number = std::to_string(specularNr++);
-			shader.setFloat(("material." + name + number).c_str(), i);
-			glBindTexture(GL_TEXTURE_2D, textures[i].id);
-		}
-		glActiveTexture(GL_TEXTURE0);
+		
 		// draw mesh
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-
-		glActiveTexture(GL_TEXTURE0);
 	}
 private:
 	// render data
@@ -86,11 +68,14 @@ private:
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
 			(void*)offsetof(Vertex, Normal));
-		// vertex texture coords
+		// vertex colors
 		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-			(void*)offsetof(Vertex, TexCoords));
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+			(void*)offsetof(Vertex, Color));
+
 		glBindVertexArray(0);
+		
 	}
 };
 #endif
+#pragma once

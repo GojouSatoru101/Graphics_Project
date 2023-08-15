@@ -10,7 +10,7 @@
 #include <C:\Users\DELL\source\repos\first_glfw\first_glfw\stb_image.h>
 #include<C:\Users\DELL\source\repos\first_glfw\first_glfw\shader_class_m.h>
 #include<C:\Users\DELL\source\repos\first_glfw\first_glfw\new_cam.h>
-#include<C:\Users\DELL\source\repos\first_glfw\first_glfw\model.h>
+#include<C:\Users\DELL\source\repos\first_glfw\first_glfw\new_model.h>
 
 #include <iostream>
 
@@ -61,13 +61,13 @@ int main()
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    
+
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     //glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    
+
 
     // tell GLFW to capture our mouse
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -86,12 +86,14 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader ourShader("C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\model_loading.vs", "C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\model_loading.fs");
+    Shader ourShader("C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\new_models.vs", "C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\new_models.fs");
 
     ourShader.use();
-    glUniform1i(glGetUniformLocation(ourShader.ID, "texture"), 0);
+    //glUniform1i(glGetUniformLocation(ourShader.ID, "texture"), 0)
 
-    Model ourModel("TOH_final.obj");
+    Model base("base.obj");
+    Model tower("one_tower.obj");
+    Model disc("disc.obj");
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -131,8 +133,9 @@ int main()
         model = sceneRotation * model; // Apply scene rotation to the model matrix
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
-
+        base.Draw(ourShader);
+        tower.Draw(ourShader);
+        disc.Draw(ourShader);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -159,11 +162,11 @@ void processInput(GLFWwindow* window)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 
-   /* if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE && leftAltPressed)
-    {
-        leftAltPressed = false;
-        glfwSetCursorEnterCallback(window, cursorEnter_callback);
-    }*/
+    /* if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE && leftAltPressed)
+     {
+         leftAltPressed = false;
+         glfwSetCursorEnterCallback(window, cursorEnter_callback);
+     }*/
 
     if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
     {
