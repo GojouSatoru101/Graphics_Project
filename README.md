@@ -12,3 +12,5 @@ And do the same thing using Cmake while setting up Opengl
 OR just follow this youtube tutorial https://youtu.be/W_Ey_YPUjMk
 
 Make sure to include the models and the images in same folder as your project solution or include directory and configure the path
+
+Also, import the .obj file of model in blender and export it again as .obj file since, for different devices things will change.
