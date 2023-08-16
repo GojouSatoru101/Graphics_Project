@@ -89,11 +89,13 @@ int main()
     Shader ourShader("C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\new_models.vs", "C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\new_models.fs");
 
     ourShader.use();
-    //glUniform1i(glGetUniformLocation(ourShader.ID, "texture"), 0)
+   
 
-    Model base("base.obj");
-    Model tower("one_tower.obj");
+    Model base("three_towers.obj");
     Model disc("disc.obj");
+    Model disc1("disc1.obj");
+    Model disc2("disc2.obj");
+    Model disc3("disc3.obj");
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -133,9 +135,19 @@ int main()
         model = sceneRotation * model; // Apply scene rotation to the model matrix
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
         ourShader.setMat4("model", model);
+       
+        //second method
         base.Draw(ourShader);
-        tower.Draw(ourShader);
+        //disc disc1 disc2 and disc3 are three seperate model objects
         disc.Draw(ourShader);
+        disc1.Draw(ourShader);
+        disc2.Draw(ourShader);
+        disc3.Draw(ourShader);
+
+
+
+
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);

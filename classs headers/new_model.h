@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #pragma once
 #ifndef MODEL_H
 #define MODEL_H
@@ -53,7 +53,7 @@ private:
 		// Within loadModel, we use Assimp to load the model into a data structure of Assimp called a scene object which is the root object of Assimp's data interface
 		Assimp::Importer import;
 		const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
-		/* aiProcess_Triangulate -> if the model does not (entirely)consist of triangles, Assimp transforms all the model’s primitive shapes to triangles first.
+		/* aiProcess_Triangulate -> if the model does not (entirely)consist of triangles, Assimp transforms all the modelï¿½s primitive shapes to triangles first.
 
 			aiProcess_FlipUVs -> flips y-axis of texture coordinates
 		*/
@@ -71,11 +71,11 @@ private:
 	{
 		//each node contains a set of mesh indices where each index points to a specific mesh located in the scene object.
 
-		//retrieve these mesh indices, retrieve each mesh, process each mesh, and then do this all again for each of the node’s children nodes.
+		//retrieve these mesh indices, retrieve each mesh, process each mesh, and then do this all again for each of the nodeï¿½s children nodes.
 		for (unsigned int i = 0; i < node->mNumMeshes; i++)
 		{
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			meshes.push_back(processMesh(mesh, scene,modelcounter));
+			meshes.push_back(processMesh(mesh, scene, modelcounter));
 			modelcounter++;
 		}
 		for (unsigned int i = 0; i < node->mNumChildren; i++)
@@ -84,7 +84,7 @@ private:
 		}
 	}
 	// translate aiMesh object to our Mesh object
-	// Processing a mesh is a 3-part process: retrieve all the vertex data, retrieve the mesh’s indices, and finally retrieve the relevant material data.
+	// Processing a mesh is a 3-part process: retrieve all the vertex data, retrieve the meshï¿½s indices, and finally retrieve the relevant material data.
 	Mesh processMesh(aiMesh* mesh, const aiScene* scene, unsigned int ModelIndex)
 	{
 		vector<Vertex> vertices;
@@ -93,7 +93,12 @@ private:
 		glm::vec3 modelColors[] = {
 			glm::vec3(0.2f, 0.3f, 0.5f),   // Color for model 0
 			glm::vec3(0.6f, 0.1f, 0.2f),   // Color for model 1
-			glm::vec3(0.0f, 0.7f, 0.3f)    // Color for model 2
+			glm::vec3(0.0f, 0.7f, 0.3f),   // Color for model 2
+			glm::vec3(0.8f, 0.6f, 0.2f),
+			glm::vec3(0.3f, 0.3f, 0.8f),
+			glm::vec3(0.4f, 0.9f, 0.2f),
+			glm::vec3(1.0f, 1.0f, 1.0f),
+			glm::vec3(0.5f, 0.5f, 0.5f)
 		};
 
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -132,7 +137,7 @@ private:
 		return Mesh(vertices, indices);
 	}
 
-	
+
 };
 
 //void draw //euta model lai copy garne function
