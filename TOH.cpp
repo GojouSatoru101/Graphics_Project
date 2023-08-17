@@ -13,13 +13,13 @@
 #include<C:\Users\DELL\source\repos\first_glfw\first_glfw\new_model.h>
 
 #include <iostream>
-
+#include <cmath>
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
-glm::vec3 calculateBezierPoint(glm::vec3 P0, glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, float t);
+glm::vec3 calculateBezierPoint(glm::vec3 A, glm::vec3 B, glm::vec3 C, glm::vec3 D, glm::vec3 E, float t);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -161,15 +161,18 @@ int main()
             if(anime)
             {
                 glm::vec3 bezierP0 = disc2.CalculatePos(translate_vec);/* initial position of the disc */
-                glm::vec3 bezierP1 = glm::vec3(0.5, 6.7,0.0);
-                glm::vec3 bezierP2 = glm::vec3(14, -1, 0);
-                glm::vec3 bezierP3 = glm::vec3(15, -5, 0);       /* final position of disc */
+                glm::vec3 bezierP1 = glm::vec3(0.0, 0.0,0.0);
+                glm::vec3 bezierP2 = glm::vec3(0, 15, 0.0);
+                glm::vec3 bezierP3 = glm::vec3(7.5, -2.5, 0.0);
+                glm::vec3 bezierP4 = glm::vec3(15.0, 15.0, 0.0);
+                glm::vec3 bezierP5 = glm::vec3(15.0, -2.0, 0.0);
+                /* final position of disc */
                 //glm::vec3 bezierP3 = base.CalculatePos(glm::vec3(0.0f, 0.0f, 0.0f));
-                t += 0.001f;
+                t += 0.0001f;
  
                 //cout << t << endl;
                 t = glm::clamp(t, 0.0f, 1.0f);
-                glm::vec3 interpolatedPosition = calculateBezierPoint(bezierP0, bezierP1, bezierP2, bezierP3, t);
+                glm::vec3 interpolatedPosition = calculateBezierPoint(bezierP0, bezierP1, bezierP2, bezierP3, bezierP4,t);
                 translate_vec = interpolatedPosition;
             }
         }
@@ -188,18 +191,15 @@ int main()
     return 0;
 }
 
-glm::vec3 calculateBezierPoint(glm::vec3 P0, glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, float t)
+glm::vec3 calculateBezierPoint(glm::vec3 A, glm::vec3 B, glm::vec3 C, glm::vec3 D,glm::vec3 E ,float t)
 {
-    float u = 1.0f - t;
-    float ttt = t * t * t;
-    float tt = t * t;
-    float uu = u * u;
-    float uuu = u * u * u;
-
+    float u=1-t;
     glm::vec3 point;
-    point.x= uuu * P0.x + 3.0f * uu * t * P1.x + 3 * u * tt * P2.x + ttt * P3.x;
-    point.y = uuu * P0.y + 3.0f * uu * t * P1.y + 3 * u * tt * P2.y + ttt * P3.y;
-    point.z = P0.z;
+    point.x = pow(u, 4) * A.x + 4 * t * pow(u, 3) * B.x + 6 * pow(t, 2) * pow(u, 2) * C.x + 4 * pow(t, 3) * u * D.x + pow(t, 4) * E.x;
+
+   
+    point.x = pow(u, 4) * A.y + 4 * t * pow(u, 3) * B.y + 6 * pow(t, 2) * pow(u, 2) * C.y + 4 * pow(t, 3) * u * D.y + pow(t, 4) * E.y;
+    point.z = A.z;
     //point.x = uuu * P0.x + 3.0f * uu * t * P1.x + 3 * u * tt * P2.x + ttt * P3.x;
     return point;
 }
