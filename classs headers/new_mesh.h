@@ -40,11 +40,12 @@ public:
 	}
 	void Draw(Shader& shader)
 	{
-		
+
 		// draw mesh
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	}
+
 private:
 	// render data
 	unsigned int VAO, VBO, EBO;
@@ -74,7 +75,7 @@ private:
 			(void*)offsetof(Vertex, Color));
 
 		glBindVertexArray(0);
-		
+
 	}
 };
 #endif

@@ -31,7 +31,9 @@ class Model
 public:
 	string directory;
 	bool gammaCorrection;
+	float height;
 	vector<Mesh> meshes;
+	glm::vec3 coord;
 	Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
 	{
 		loadModel(path);
@@ -45,6 +47,99 @@ public:
 		// loops over each of the meshes to call their respective Draw function
 		for (unsigned int i = 0; i < meshes.size(); i++)
 			meshes[i].Draw(shader);
+	}
+	glm::vec3 CalculatediscPos(glm::vec3 translation) {
+		float maxPos = -std::numeric_limits<float>::infinity();
+
+		for (const Mesh& mesh : meshes) {
+			for (const Vertex& vertex : mesh.vertices) {
+				glm::vec3 transformedVertex = translation + vertex.Position;
+				if (transformedVertex.x > maxPos)
+				{
+					maxPos = transformedVertex.x;
+					coord.x = maxPos;
+				}
+				if (transformedVertex.y > maxPos) {
+					maxPos = transformedVertex.y;
+					coord.y = maxPos;
+				}
+				if (transformedVertex.z > maxPos)
+				{
+					maxPos = transformedVertex.z;
+					coord.z = maxPos;
+				}
+			}
+		}
+
+		return coord ;
+	}
+
+	glm::vec3 CalculatetowerPos() {
+		float maxPos = -std::numeric_limits<float>::infinity();
+
+		for (const Mesh& mesh : meshes) {
+			for (const Vertex& vertex : mesh.vertices) {
+				glm::vec3 transformedVertex =  vertex.Position;
+				if (transformedVertex.x > maxPos)
+				{
+					maxPos = transformedVertex.x;
+					coord.x = maxPos;
+				}
+				if (transformedVertex.y > maxPos) {
+					maxPos = transformedVertex.y;
+					coord.y = maxPos;
+				}
+				if (transformedVertex.z > maxPos)
+				{
+					maxPos = transformedVertex.z;
+					coord.z = maxPos;
+				}
+			}
+		}
+
+		return coord;
+	}
+	/*glm::vec3 getdiscPos(glm::mat4 model_matrix)
+	{
+		glm::vec3 pos_vec = glm::vec3(model_matrix[3]);
+
+		return pos_vec;
+	}*/
+	//float CalculateXPos(glm::vec3 translation) {
+	//	float maxHeight = -std::numeric_limits<float>::infinity();
+	//	float minHeight = std::numeric_limits<float>::infinity();
+
+	//	for (const Mesh& mesh : meshes) {
+	//		for (const Vertex& vertex : mesh.vertices) {
+	//			glm::vec3 transformedVertex = translation + vertex.Position;
+	//			if (transformedVertex.x > maxHeight) {
+	//				maxHeight = transformedVertex.x;
+	//			}
+	//			/*if (vertex.Position.y < minHeight) {
+	//				minHeight = vertex.Position.y;*/
+	//				//}
+	//		}
+	//	}
+
+	//	return maxHeight;
+	//}
+	float CalculateHeight() {
+		float maxHeight = -std::numeric_limits<float>::infinity();
+		float minHeight = std::numeric_limits<float>::infinity();
+
+		for (const Mesh& mesh : meshes) {
+			for (const Vertex& vertex : mesh.vertices) {
+				
+				if (vertex.Position.y > maxHeight) {
+					maxHeight = vertex.Position.y;
+				}
+				if (vertex.Position.y < minHeight) {
+					minHeight = vertex.Position.y;
+				}
+			}
+		}
+
+		return maxHeight-minHeight;
 	}
 private:
 
