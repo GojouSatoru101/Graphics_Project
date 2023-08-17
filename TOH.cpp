@@ -19,7 +19,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
-
+glm::vec3 calculateBezierPoint(glm::vec3 P0, glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, float t);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -30,9 +30,12 @@ Camera camera(glm::vec3(0.88f, 8.8f, 28.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
-
+unsigned int num_spaces = 0;
+bool isSpacePressed = false;
 bool leftAltPressed = false;
 bool isMouseDragging = false;
+bool anime = false;
+float anim_speed = 0.001f;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
@@ -89,15 +92,17 @@ int main()
     Shader ourShader("C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\new_models.vs", "C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\new_models.fs");
 
     ourShader.use();
-   
+
 
     Model base("three_towers.obj");
     Model disc("disc.obj");
     Model disc1("disc1.obj");
     Model disc2("disc2.obj");
-    Model disc3("disc3.obj");
     // render loop
     // -----------
+    glm::vec3 translate_vec = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    float t = 0.0f;
     while (!glfwWindowShouldClose(window))
     {
         // per-frame time logic
@@ -109,7 +114,6 @@ int main()
         // input
         // -----
         processInput(window);
-
         // render
         // ------
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
@@ -131,34 +135,73 @@ int main()
 
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
+
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
         model = sceneRotation * model; // Apply scene rotation to the model matrix
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	
         ourShader.setMat4("model", model);
-       
-        //second method
+
         base.Draw(ourShader);
         //disc disc1 disc2 and disc3 are three seperate model objects
         disc.Draw(ourShader);
         disc1.Draw(ourShader);
+        //disc2.Draw(ourShader);
+
+        glm::mat4 translateModel = glm::mat4(1.0f);
+        translateModel = glm::translate(translateModel, translate_vec); // translate it down so it's at the center of the scene
+        translateModel = sceneRotation * translateModel; // Apply scene rotation to the model matrix
+        translateModel = glm::scale(translateModel, glm::vec3(1.0f, 1.0f, 1.0f));	
+        ourShader.setMat4("model", translateModel);
         disc2.Draw(ourShader);
-        disc3.Draw(ourShader);
-
-
-
-
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            if (!anime) {
+                anime = true;
+                t = 0.0f;
+            }
+            if(anime)
+            {
+                glm::vec3 bezierP0 = disc2.CalculatePos(translate_vec);/* initial position of the disc */
+                glm::vec3 bezierP1 = glm::vec3(0.5, 6.7,0.0);
+                glm::vec3 bezierP2 = glm::vec3(14, -1, 0);
+                glm::vec3 bezierP3 = glm::vec3(15, -5, 0);       /* final position of disc */
+                //glm::vec3 bezierP3 = base.CalculatePos(glm::vec3(0.0f, 0.0f, 0.0f));
+                t += 0.001f;
+ 
+                //cout << t << endl;
+                t = glm::clamp(t, 0.0f, 1.0f);
+                glm::vec3 interpolatedPosition = calculateBezierPoint(bezierP0, bezierP1, bezierP2, bezierP3, t);
+                translate_vec = interpolatedPosition;
+            }
+        }
+        else {
+            anime = false;
+        }
+       
+    // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+    // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
+}
+
+glm::vec3 calculateBezierPoint(glm::vec3 P0, glm::vec3 P1, glm::vec3 P2, glm::vec3 P3, float t)
+{
+    float u = 1.0f - t;
+    float ttt = t * t * t;
+    float tt = t * t;
+    float uu = u * u;
+    float uuu = u * u * u;
+
+    glm::vec3 point;
+    point.x= uuu * P0.x + 3.0f * uu * t * P1.x + 3 * u * tt * P2.x + ttt * P3.x;
+    point.y = uuu * P0.y + 3.0f * uu * t * P1.y + 3 * u * tt * P2.y + ttt * P3.y;
+    point.z = P0.z;
+    //point.x = uuu * P0.x + 3.0f * uu * t * P1.x + 3 * u * tt * P2.x + ttt * P3.x;
+    return point;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -197,6 +240,12 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         camera.ProcessKeyboard(BACKWARD, deltaTime);
 
+    if (glfwGetKey(window,GLFW_KEY_SPACE)==GLFW_PRESS) {
+            isSpacePressed = true;
+        }
+    else if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+            isSpacePressed = false;
+        }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
