@@ -94,7 +94,10 @@ int main()
     ourShader.use();
 
 
-    Model base("three_towers.obj");
+    Model base("base.obj");
+    Model tower1("tower1.obj");
+    Model tower2("tower2.obj");
+    Model tower3("tower3.obj");
     Model disc("disc.obj");
     Model disc1("disc1.obj");
     Model disc2("disc2.obj");
@@ -103,6 +106,7 @@ int main()
     glm::vec3 translate_vec = glm::vec3(0.0f, 0.0f, 0.0f);
 
     float t = 0.0f;
+    float k = 2;
     while (!glfwWindowShouldClose(window))
     {
         // per-frame time logic
@@ -142,6 +146,9 @@ int main()
         ourShader.setMat4("model", model);
 
         base.Draw(ourShader);
+        tower1.Draw(ourShader);
+        tower2.Draw(ourShader);
+        tower3.Draw(ourShader);
         //disc disc1 disc2 and disc3 are three seperate model objects
         disc.Draw(ourShader);
         disc1.Draw(ourShader);
@@ -160,15 +167,15 @@ int main()
             }
             if(anime)
             {
-                glm::vec3 bezierP0 = disc2.CalculatePos(translate_vec);/* initial position of the disc */
-                glm::vec3 bezierP1 = glm::vec3(0.0, 0.0,0.0);
-                glm::vec3 bezierP2 = glm::vec3(0, 15, 0.0);
-                glm::vec3 bezierP3 = glm::vec3(7.5, -2.5, 0.0);
-                glm::vec3 bezierP4 = glm::vec3(15.0, 15.0, 0.0);
-                glm::vec3 bezierP5 = glm::vec3(15.0, -2.0, 0.0);
+                glm::vec3 bezierP0 = disc2.CalculatediscPos(translate_vec);/* initial position of the disc */
+               
+                glm::vec3 bezierP4 = tower2.CalculatetowerPos(); /* tower ko position */
+                glm::vec3 bezierP1 = glm::vec3(bezierP0.x, bezierP0.y+k,0.0);
+                glm::vec3 bezierP2 = glm::vec3(bezierP4.x,bezierP4.y+k, 0.0);
+                glm::vec3 bezierP3 = glm::vec3((bezierP0.x+bezierP4.x)/2,(bezierP0.y+bezierP4.y)/2, 0.0);
                 /* final position of disc */
                 //glm::vec3 bezierP3 = base.CalculatePos(glm::vec3(0.0f, 0.0f, 0.0f));
-                t += 0.0001f;
+                t += deltaTime* 0.001f;
  
                 //cout << t << endl;
                 t = glm::clamp(t, 0.0f, 1.0f);
@@ -180,8 +187,12 @@ int main()
             anime = false;
         }
        
-    // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+   
     // -------------------------------------------------------------------------------
+    // 
+   
+
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
