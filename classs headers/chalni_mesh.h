@@ -5,7 +5,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include<C:\Users\DELL\source\repos\first_glfw\first_glfw\shader.h>
+#include<C:\Users\DELL\source\repos\first_glfw\first_glfw\shader_class_m.h>
 
 #include <iostream>
 #include<vector>

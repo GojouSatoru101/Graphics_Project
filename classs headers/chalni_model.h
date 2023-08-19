@@ -12,7 +12,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include <C:\Users\DELL\source\repos\first_glfw\first_glfw\new_mesh.h>
+#include<C:\Users\DELL\source\repos\first_glfw\first_glfw\chalni_mesh.h>
 //#include<C:\Users\DELL\source\repos\first_glfw\first_glfw\shader.h>
 
 #include <string>
@@ -31,9 +31,18 @@ class Model
 public:
 	string directory;
 	bool gammaCorrection;
-	float height;
 	vector<Mesh> meshes;
-	glm::vec3 coord;
+
+	//This is a constant value, that represents the model's coordinate in original coordinates
+	glm::vec3 model_coord;
+	//This is a translate vector specific to each model
+	glm::vec3 model_translate;
+	//Actual world position of a model can be calculated by summing up above two
+
+	//Model rotation and scale matrices , needed to render
+	glm::mat4 rotation_matrix;
+	glm::mat4 scale_matrix;
+
 	Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
 	{
 		loadModel(path);
@@ -42,104 +51,66 @@ public:
 	{
 		loadModel(path);
 	}*/
+
+	//Sets the model matrix and then draws the model
 	void Draw(Shader& shader)
 	{
+		glm::mat4 model = glm::mat4( 1.0f );
+		
+		model = glm::translate(model , model_translate ); // translate as per "model_translate" vector
+		model = rotation_matrix * model; 
+		model = scale_matrix * model;
+
+		shader.setMat4( "model", model );
+		
 		// loops over each of the meshes to call their respective Draw function
 		for (unsigned int i = 0; i < meshes.size(); i++)
 			meshes[i].Draw(shader);
 	}
-	glm::vec3 CalculatediscPos(glm::vec3 translation) {
+	//To be used to setup model position
+	glm::vec3 CalculateModelPos() {
 		float maxPos = -std::numeric_limits<float>::infinity();
 
-		for (const Mesh& mesh : meshes) {
+		unsigned long long total_points = 0;
+		model_coord = glm::vec3( 0.f, 0.f, 0.f );
+		for(const Mesh &mesh : meshes) {
+			total_points += mesh.vertices.size();
+		}
+
+		//Use center of mass as the model position
+		for(const Mesh &mesh : meshes) {
 			for (const Vertex& vertex : mesh.vertices) {
-				glm::vec3 transformedVertex = translation + vertex.Position;
-				if (transformedVertex.x > maxPos)
-				{
-					maxPos = transformedVertex.x;
-					coord.x = maxPos;
-				}
-				if (transformedVertex.y > maxPos) {
-					maxPos = transformedVertex.y;
-					coord.y = maxPos;
-				}
-				if (transformedVertex.z > maxPos)
-				{
-					maxPos = transformedVertex.z;
-					coord.z = maxPos;
-				}
+				model_coord += (1.0f / total_points) * vertex.Position;
 			}
 		}
 
-		return coord ;
+		return model_coord ;
 	}
 
-	glm::vec3 CalculatetowerPos() {
-		float maxPos = -std::numeric_limits<float>::infinity();
+	//Provides dimensions of object
+	glm::vec3 getSize() {
+		float maxValue = -std::numeric_limits<float>::infinity();
+		float minValue = std::numeric_limits<float>::infinity();
+
+		glm::vec3 minPos = { minValue,minValue,minValue };
+		glm::vec3 maxPos = { maxValue,maxValue,maxValue };
 
 		for (const Mesh& mesh : meshes) {
 			for (const Vertex& vertex : mesh.vertices) {
-				glm::vec3 transformedVertex =  vertex.Position;
-				if (transformedVertex.x > maxPos)
-				{
-					maxPos = transformedVertex.x;
-					coord.x = maxPos;
-				}
-				if (transformedVertex.y > maxPos) {
-					maxPos = transformedVertex.y;
-					coord.y = maxPos;
-				}
-				if (transformedVertex.z > maxPos)
-				{
-					maxPos = transformedVertex.z;
-					coord.z = maxPos;
-				}
-			}
-		}
 
-		return coord;
-	}
-	/*glm::vec3 getdiscPos(glm::mat4 model_matrix)
-	{
-		glm::vec3 pos_vec = glm::vec3(model_matrix[3]);
+				maxPos.x = max( maxPos.x, vertex.Position.x );
+				minPos.x = min( minPos.x, vertex.Position.x );
 
-		return pos_vec;
-	}*/
-	//float CalculateXPos(glm::vec3 translation) {
-	//	float maxHeight = -std::numeric_limits<float>::infinity();
-	//	float minHeight = std::numeric_limits<float>::infinity();
+			    maxPos.y = max( maxPos.y, vertex.Position.y );
+				minPos.y = min( minPos.y, vertex.Position.y );
 
-	//	for (const Mesh& mesh : meshes) {
-	//		for (const Vertex& vertex : mesh.vertices) {
-	//			glm::vec3 transformedVertex = translation + vertex.Position;
-	//			if (transformedVertex.x > maxHeight) {
-	//				maxHeight = transformedVertex.x;
-	//			}
-	//			/*if (vertex.Position.y < minHeight) {
-	//				minHeight = vertex.Position.y;*/
-	//				//}
-	//		}
-	//	}
-
-	//	return maxHeight;
-	//}
-	float CalculateHeight() {
-		float maxHeight = -std::numeric_limits<float>::infinity();
-		float minHeight = std::numeric_limits<float>::infinity();
-
-		for (const Mesh& mesh : meshes) {
-			for (const Vertex& vertex : mesh.vertices) {
+			    maxPos.z = max( maxPos.z, vertex.Position.z );
+				minPos.z = min( minPos.z, vertex.Position.z );
 				
-				if (vertex.Position.y > maxHeight) {
-					maxHeight = vertex.Position.y;
-				}
-				if (vertex.Position.y < minHeight) {
-					minHeight = vertex.Position.y;
-				}
 			}
 		}
 
-		return maxHeight-minHeight;
+		return maxPos - minPos;
 	}
 private:
 
@@ -161,6 +132,7 @@ private:
 		}
 		directory = path.substr(0, path.find_last_of(' / '));
 		processNode(scene->mRootNode, scene);
+		model_coord = CalculateModelPos();
 	}
 	void processNode(aiNode* node, const aiScene* scene)
 	{
