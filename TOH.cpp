@@ -19,6 +19,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
+unsigned int loadCubemap(vector<std::string> faces);
 
 //Processes quadratic curve 
 glm::vec3 calculateBezierPoint(glm::vec3 A, glm::vec3 B, glm::vec3 C, glm::vec3 D, float t);
@@ -30,7 +31,8 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-Camera camera(glm::vec3(0.88f, 8.8f, 28.0f));
+
+Camera camera(glm::vec3(0.88f, 0.0f, 28.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -82,7 +84,7 @@ void solveTOH(TowerInfo& src, TowerInfo& dst, TowerInfo& aux, int count, std::ve
 
 bool anime = false;
 float anim_speed = 0.9f;
-int destination_pole = 1;
+int destination_pole = 2;
 int selected_disc = 0;
 
 //Animation bezier points, {needs to be constant for the whole animation}
@@ -101,9 +103,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+
 
     // glfw window creation
     // --------------------
@@ -140,9 +140,74 @@ int main() {
     // build and compile our shader zprogram
     // ------------------------------------
     Shader ourShader("C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\new_models.vs", "C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\new_models.fs");
-
+    Shader skyboxShader("C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\skybox.vs", "C:\\Users\\DELL\\source\\repos\\first_glfw\\first_glfw\\skybox.fs");;
     ourShader.use();
+    float skyboxVertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
 
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+    //skybox VAO
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    vector<std::string> faces
+    {
+        ("right.jpg"),
+         ("left.jpg"),
+         ("top.jpg"),
+         ("bottom.jpg"),
+         ("front.jpg"),
+         ("back.jpg")
+    };
+    unsigned int cubemapTexture = loadCubemap(faces);
+    skyboxShader.use();
+    skyboxShader.setInt("skybox", 0);
 
     Model base("base.stl");
 
@@ -155,6 +220,16 @@ int main() {
     Model disc2("disc1.stl");
     Model disc3("disc1.stl");
     Model disc4("disc2.stl");
+
+    glm::vec3 tower1_coord = tower1.CalculateModelPos();
+    glm::vec3 tower2_coord= tower2.CalculateModelPos();
+    
+    //to get the discs in source tower
+    disc0.model_translate.x -= tower2_coord.x - tower1_coord.x;
+    disc1.model_translate.x -= tower2_coord.x - tower1_coord.x;
+    disc2.model_translate.x -= tower2_coord.x - tower1_coord.x;
+    disc3.model_translate.x -= tower2_coord.x - tower1_coord.x;
+    disc4.model_translate.x -= tower2_coord.x - tower1_coord.x;
 
     disc1.model_translate.z += disc1.getSize().z;
     disc2.model_translate.z += disc2.getSize().z;
@@ -169,12 +244,12 @@ int main() {
     tower_info[1].tower_no = 1;
     tower_info[2].tower_no = 2;
 
-    //All discs are in tower 1
-    tower_info[1].discs.push_back(0);
-    tower_info[1].discs.push_back(1);
-    tower_info[1].discs.push_back(2);
-    tower_info[1].discs.push_back(3);
-    tower_info[1].discs.push_back(4);
+    //All discs are in tower 0
+    tower_info[0].discs.push_back(0);
+    tower_info[0].discs.push_back(1);
+    tower_info[0].discs.push_back(2);
+    tower_info[0].discs.push_back(3);
+    tower_info[0].discs.push_back(4);
 
     std::vector<Movement> cmd_buffer;
     int curr_cmd = 0;
@@ -208,22 +283,23 @@ int main() {
 
         // camera/view transformation
         glm::mat4 view = camera.GetViewMatrix();
+
         ourShader.setMat4("view", view);
 
         glm::mat4 sceneRotation = camera.GetSceneRotationMatrix();
 
-
+        glm::mat4 uprightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         // render the loaded models
 
         //Draw base
 
-        base.rotation_matrix = sceneRotation; // Apply scene rotation to the model matrix
+        base.rotation_matrix = uprightRotation*sceneRotation; // Apply scene rotation to the model matrix
         base.scale_matrix = glm::mat4(1.0f);
         base.Draw(ourShader);
 
         //Draw tower1,2,3
         for (auto& tower : towers) {
-            tower->rotation_matrix = sceneRotation;
+            tower->rotation_matrix = uprightRotation * sceneRotation;
             tower->scale_matrix = glm::mat4(1.0f);
             tower->Draw(ourShader);
 
@@ -233,7 +309,7 @@ int main() {
         //disc disc1 disc2 and disc3 are three seperate model objects
 
         for (auto& disc : discs) {
-            disc->rotation_matrix = sceneRotation;
+            disc->rotation_matrix = uprightRotation * sceneRotation;
             disc->scale_matrix = glm::mat4(1.0f);
             disc->Draw(ourShader);
 
@@ -282,7 +358,7 @@ int main() {
                     glm::vec3(0.f, 0.f, 0.5f * towers[destination_pole]->getSize().z - (tower_info[destination_pole].discs.size() + 0.5f) * discs[0]->getSize().z);
 
                 //Control points
-                float k = towers[destination_pole]->getSize().z * 3.f;
+                float k = towers[destination_pole]->getSize().z * 2.0f;
                 bezier_points[1] = bezier_points[0] + glm::vec3(0.f, 0.f, k);
                 bezier_points[2] = bezier_points[3] + glm::vec3(0.f, 0.f, k);
 
@@ -315,7 +391,18 @@ int main() {
 
         // -------------------------------------------------------------------------------
         // 
-
+        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        skyboxShader.use();
+        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
@@ -431,4 +518,38 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+unsigned int loadCubemap(vector<std::string> faces)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++)
+    {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height,
+            &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB,
+                width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap failed to load at path: " << faces[i]
+                << std::endl;
+            stbi_image_free(data);
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R,
+        GL_CLAMP_TO_EDGE);
+    return textureID;
 }
